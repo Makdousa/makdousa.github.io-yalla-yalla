@@ -1,0 +1,1307 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>يلا يلا · Buchstaben lernen</title>
+<style>
+/* ============================================================
+   يلا يلا  ·  Arabisch-Buchstaben-App
+   Design: "Oase" — Türkis / Koralle / Gold
+   (gleiche Optik wie die große App, aber bewusst auf das
+   Alphabet reduziert — siehe TOPIC_TILES im Script, um im
+   Laufe des Semesters neue Themen freizuschalten)
+   ============================================================ */
+
+:root{
+  --bg:        #eaf1ef;
+  --surface:   #ffffff;
+  --surface-2: #f3f7f5;
+  --text:      #1f2733;
+  --muted:     #5c6b73;
+  --border:    #d9e2df;
+  --shadow:    0 10px 30px rgba(24,52,48,.10), 0 2px 6px rgba(24,52,48,.06);
+
+  --teal:   #10a89b;
+  --teal-d: #0c8378;
+  --coral:  #ff6a45;
+  --coral-d:#e8532f;
+  --gold:   #ffbf3d;
+  --violet: #8069f2;
+  --blue:   #3d9bff;
+  --emerald:#1fb46b;
+
+  --ok:   #17ac5b;
+  --ok-bg:#e4f7ec;
+  --bad:  #e2413f;
+  --bad-bg:#fdeceb;
+
+  --font-display: ui-rounded, "SF Pro Rounded", "Segoe UI", system-ui, sans-serif;
+  --font-body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-ar: "Geeza Pro", "Damascus", "Al Bayan", "Noto Naskh Arabic", "Traditional Arabic", "Times New Roman", serif;
+
+  --r-lg: 24px;
+  --r-md: 16px;
+  --r-sm: 10px;
+}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:        #14122a;
+    --surface:   #211d3c;
+    --surface-2: #2a2548;
+    --text:      #f2eefb;
+    --muted:     #a99fc9;
+    --border:    #372f5c;
+    --shadow:    0 12px 34px rgba(0,0,0,.40);
+    --ok-bg:#123322; --bad-bg:#3a1a1c;
+  }
+}
+:root[data-theme="light"]{
+  --bg:#eaf1ef; --surface:#fff; --surface-2:#f3f7f5; --text:#1f2733;
+  --muted:#5c6b73; --border:#d9e2df; --shadow:0 10px 30px rgba(24,52,48,.10),0 2px 6px rgba(24,52,48,.06);
+  --ok-bg:#e4f7ec; --bad-bg:#fdeceb;
+}
+:root[data-theme="dark"]{
+  --bg:#14122a; --surface:#211d3c; --surface-2:#2a2548; --text:#f2eefb;
+  --muted:#a99fc9; --border:#372f5c; --shadow:0 12px 34px rgba(0,0,0,.40);
+  --ok-bg:#123322; --bad-bg:#3a1a1c;
+}
+
+*{ box-sizing:border-box; }
+html,body{ margin:0; padding:0; }
+body{
+  font-family:var(--font-body);
+  background:
+    radial-gradient(1200px 600px at 110% -10%, rgba(16,168,155,.12), transparent 60%),
+    radial-gradient(900px 500px at -10% 0%, rgba(255,106,69,.10), transparent 55%),
+    var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+
+.ar{ font-family:var(--font-ar); direction:rtl; unicode-bidi:isolate; line-height:1.7; }
+
+.app{ max-width:760px; margin:0 auto; padding:16px 16px 60px; }
+
+/* ---------- Top bar ---------- */
+.topbar{
+  display:flex; align-items:center; gap:12px;
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r-lg); padding:12px 16px; box-shadow:var(--shadow);
+  position:sticky; top:12px; z-index:20;
+}
+.brand{ display:flex; align-items:center; gap:10px; margin-inline-end:auto; cursor:pointer; }
+.brand .logo{
+  width:40px;height:40px;border-radius:12px;display:grid;place-items:center;
+  background:linear-gradient(145deg,var(--teal),var(--teal-d));
+  color:#fff;font-family:var(--font-ar);font-size:20px;font-weight:700;
+  box-shadow:0 6px 14px rgba(16,168,155,.4);
+}
+.brand h1{ font-family:var(--font-display); font-size:1.15rem; margin:0; letter-spacing:.2px; }
+.brand small{ color:var(--muted); font-size:.72rem; display:block; margin-top:-2px;}
+
+.stat{ display:flex; align-items:center; gap:6px; font-family:var(--font-display); font-weight:700; font-size:1rem; }
+.stat .ico{ font-size:1.15rem; line-height:1; }
+.stat.flame{ color:var(--coral); }
+.stat.gem{ border:none; background:none; cursor:pointer; padding:0; color:var(--gold); transition:transform .12s; }
+.stat.gem:hover{ transform:translateY(-1px); }
+.iconbtn{
+  border:none;background:var(--surface-2);color:var(--text);
+  width:38px;height:38px;border-radius:11px;cursor:pointer;font-size:1.05rem;
+  display:grid;place-items:center; transition:transform .12s, background .12s;
+}
+.iconbtn:hover{ background:var(--border); transform:translateY(-1px); }
+
+.lvlmini{ position:relative; width:40px; height:40px; border:none; background:none; cursor:pointer; padding:0; flex:0 0 auto; }
+.lvlmini svg{ display:block; }
+.lvlmini > span{ position:absolute; inset:0; display:grid; place-items:center; font-family:var(--font-display); font-weight:800; font-size:.95rem; color:var(--text); }
+.lvlmini:hover{ transform:translateY(-1px); }
+
+/* ---------- Modal (Abzeichen) ---------- */
+.modal{ position:fixed; inset:0; background:rgba(8,10,20,.55); display:grid; place-items:center; z-index:90; padding:20px; }
+.modal[hidden]{ display:none; }
+.modal-card{ background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); box-shadow:var(--shadow); padding:20px; max-width:460px; width:100%; }
+.modal-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+.modal-head h2{ font-family:var(--font-display); margin:0; font-size:1.2rem; }
+.modal-note{ color:var(--muted); font-size:.85rem; margin:14px 0 0; }
+.modal-sub{ color:var(--muted); font-size:.85rem; margin:0 0 12px; font-weight:700; }
+
+/* ---------- Level ring ---------- */
+.levelcard{
+  margin-top:16px; background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r-lg); box-shadow:var(--shadow); padding:18px;
+  display:flex; align-items:center; gap:18px;
+}
+.ring{ position:relative; width:82px; height:82px; flex:0 0 auto; }
+.ring svg{ transform:rotate(-90deg); }
+.ring .val{
+  position:absolute; inset:0; display:grid; place-items:center;
+  font-family:var(--font-display); font-weight:800; font-size:1.5rem;
+}
+.ring .val small{ font-size:.6rem; color:var(--muted); font-weight:600; display:block; text-align:center; margin-top:-3px;}
+.levelmeta{ flex:1; min-width:0; }
+.levelmeta .t{ font-family:var(--font-display); font-weight:700; font-size:1.1rem; }
+.levelmeta .s{ color:var(--muted); font-size:.85rem; margin-top:2px; }
+.xpbar{ height:12px; border-radius:99px; background:var(--surface-2); overflow:hidden; margin-top:10px; border:1px solid var(--border);}
+.xpbar > i{ display:block; height:100%; border-radius:99px;
+  background:linear-gradient(90deg,var(--gold),var(--coral)); transition:width .6s cubic-bezier(.2,.8,.2,1); }
+
+/* ---------- Abzeichen ---------- */
+.badge-strip{ display:flex; flex-wrap:wrap; gap:10px; max-height:44vh; overflow-y:auto; }
+.badge{ display:flex; flex-direction:column; align-items:center; gap:5px; width:84px; padding:10px 6px;
+  border-radius:var(--r-md); background:var(--surface); border:1px solid var(--border); box-shadow:var(--shadow); }
+.badge .b-ico{ font-size:1.8rem; line-height:1; }
+.badge .b-name{ font-size:.66rem; color:var(--muted); text-align:center; line-height:1.2; font-weight:700; }
+.badge.locked{ opacity:.5; filter:grayscale(.9); }
+.badge.earned{ border-color:var(--gold); cursor:pointer; }
+.badge.earned:hover{ transform:translateY(-2px); }
+.badge.earned .b-name{ color:var(--text); }
+.badge-detail{ margin-top:12px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--r-md); padding:12px 14px; font-size:.98rem; }
+.badge-detail[hidden]{ display:none; }
+.badge-detail .ar{ font-size:1.4rem; }
+.badge-detail .tr{ color:var(--muted); font-size:.85rem; }
+.flag-svg{ border-radius:2px; box-shadow:0 0 0 1px rgba(0,0,0,.12); }
+.badge .b-ico .flag-svg{ width:1.9rem; height:1.27rem; display:inline-block; }
+.badge-detail .flag-svg{ width:1.4rem; height:.93rem; display:inline-block; vertical-align:middle; }
+#toastMsg .flag-svg{ width:1.3rem; height:.87rem; display:inline-block; vertical-align:middle; }
+
+/* ---------- Section titles ---------- */
+.sechead{ display:flex; align-items:baseline; gap:10px; margin:26px 4px 12px; }
+.sechead h2{ font-family:var(--font-display); font-size:1.15rem; margin:0; }
+.sechead span{ color:var(--muted); font-size:.82rem; }
+
+/* ---------- Startseiten-Menü ---------- */
+.navgrid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.navtile{ border:none; cursor:pointer; color:#fff; border-radius:var(--r-lg); padding:18px 16px; text-align:start;
+  display:flex; flex-direction:column; gap:1px; box-shadow:var(--shadow); transition:transform .14s; min-height:118px; }
+.navtile:hover{ transform:translateY(-2px); }
+.navtile:active{ transform:translateY(0); }
+.navtile .nt-ico{ font-size:2rem; margin-bottom:6px; }
+.navtile .nt-t{ font-family:var(--font-display); font-weight:800; font-size:1.15rem; }
+.navtile .nt-s{ font-size:.82rem; opacity:.92; }
+.navtile.c-teal{ background:linear-gradient(135deg,#12b3a4,#0c8378); }
+.navtile.c-coral{ background:linear-gradient(135deg,#ff7a52,#e8532f); }
+.navtile.c-violet{ background:linear-gradient(135deg,#8f7bf6,#6a52e0); }
+.navtile.c-gold{ background:linear-gradient(135deg,#ffc94d,#f39c1a); }
+.page-head{ display:flex; align-items:center; gap:12px; margin:6px 0 10px; }
+.page-head h2{ font-family:var(--font-display); font-size:1.3rem; margin:0; }
+.page-head .iconbtn{ font-size:1.6rem; }
+.page-intro{ color:var(--muted); font-size:.9rem; margin:0 4px 16px; line-height:1.5; }
+
+/* ---------- Gruppen-Karten ---------- */
+.grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:14px; }
+@media (max-width:520px){ .grid{ grid-template-columns:1fr; } }
+
+.cat{
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg);
+  box-shadow:var(--shadow); overflow:hidden; display:flex; flex-direction:column;
+}
+.cat.locked{ opacity:.55; filter:grayscale(.35); }
+.cat .head{ padding:14px 16px 10px; color:#fff; position:relative; }
+.cat .head h3{ font-family:var(--font-display); margin:0; font-size:1.05rem; }
+.cat .head .letters{ font-size:1.5rem; margin-top:2px; }
+.cat .head .lock{ position:absolute; top:12px; inset-inline-end:14px; font-size:1.3rem; }
+.cat .body{ padding:12px 14px 14px; display:flex; flex-direction:column; gap:10px; }
+.cat .prog{ height:8px; border-radius:99px; background:var(--surface-2); overflow:hidden; border:1px solid var(--border); }
+.cat .prog > i{ display:block; height:100%; border-radius:99px; background:var(--teal); transition:width .5s; }
+.cat .progtxt{ font-size:.74rem; color:var(--muted); }
+.cat .btns{ display:flex; gap:6px; flex-wrap:wrap; }
+.cat .btns button{
+  flex:1 1 auto; border:1px solid var(--border); background:var(--surface-2); color:var(--text);
+  border-radius:var(--r-sm); padding:9px 6px; cursor:pointer; font-weight:700; font-size:.78rem;
+  font-family:var(--font-display); transition:transform .12s, background .12s, border-color .12s;
+}
+.cat .btns button:hover:not(:disabled){ transform:translateY(-1px); }
+.cat .btns button:disabled{ cursor:default; opacity:.6; }
+.cat .btns .pr{ background:var(--teal); color:#fff; border-color:var(--teal); }
+.cat .btns .pr:hover:not(:disabled){ background:var(--teal-d); }
+
+.c-teal .head{background:linear-gradient(135deg,#12b3a4,#0c8378);} .c-teal .prog>i{background:#10a89b;}
+.c-coral .head{background:linear-gradient(135deg,#ff7a52,#e8532f);} .c-coral .prog>i{background:#ff6a45;}
+.c-violet .head{background:linear-gradient(135deg,#8f7bf6,#6a52e0);} .c-violet .prog>i{background:#8069f2;}
+.c-gold .head{background:linear-gradient(135deg,#ffc94d,#f39c1a);} .c-gold .prog>i{background:#f7a91e;}
+.c-blue .head{background:linear-gradient(135deg,#54a8ff,#2a7fe0);} .c-blue .prog>i{background:#3d9bff;}
+.c-emerald .head{background:linear-gradient(135deg,#2bc47b,#159a58);} .c-emerald .prog>i{background:#1fb46b;}
+
+/* ---------- Session / Übungsbildschirme ---------- */
+.screen{ display:none; }
+.screen.active{ display:block; animation:fade .25s ease; }
+@keyframes fade{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;} }
+
+.sess-top{ display:flex; align-items:center; gap:12px; margin-bottom:6px; }
+.sess-top .close{ font-size:1.4rem; }
+.sbar{ flex:1; height:14px; border-radius:99px; background:var(--surface-2); overflow:hidden; border:1px solid var(--border); }
+.sbar > i{ display:block; height:100%; background:linear-gradient(90deg,var(--teal),#4fd6c8); border-radius:99px; transition:width .4s; }
+.combo{ font-family:var(--font-display); font-weight:800; color:var(--coral); min-width:44px; text-align:end; font-size:.95rem; }
+
+.qcard{
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg);
+  box-shadow:var(--shadow); padding:30px 22px; margin-top:18px;
+}
+.qprompt{ color:var(--muted); font-size:.9rem; font-weight:700; text-transform:uppercase; letter-spacing:.5px; text-align:center; }
+.qword{ text-align:center; margin:14px 0 6px; }
+.qword .ar{ font-size:4.4rem; font-weight:600; }
+
+.options{ display:grid; gap:12px; margin-top:22px; }
+.opt{
+  border:2px solid var(--border); background:var(--surface-2); color:var(--text);
+  border-radius:var(--r-md); padding:16px 18px; cursor:pointer; text-align:center;
+  font-size:1.15rem; transition:transform .1s, border-color .12s, background .12s;
+  display:flex; align-items:center; justify-content:center; gap:8px; min-height:58px;
+  font-family:var(--font-display); font-weight:700;
+}
+.opt:hover:not(.locked){ transform:translateY(-2px); border-color:var(--teal); }
+.opt .ar{ font-size:2.4rem; font-weight:600; }
+.opt.correct{ border-color:var(--ok); background:var(--ok-bg); color:var(--ok); }
+.opt.wrong{ border-color:var(--bad); background:var(--bad-bg); color:var(--bad); }
+.opt.locked{ cursor:default; opacity:.65; }
+.opt.locked.correct, .opt.locked.wrong{ opacity:1; }
+
+/* ---------- Lautsprecher-Buttons ---------- */
+.soundbtn{
+  border:none; cursor:pointer; color:#fff; background:linear-gradient(145deg,var(--teal),var(--teal-d));
+  border-radius:50%; display:grid; place-items:center; box-shadow:var(--shadow); transition:transform .12s;
+  width:44px; height:44px; font-size:1.2rem;
+}
+.soundbtn:hover{ transform:translateY(-2px) scale(1.04); }
+.soundbtn.sm{ width:30px; height:30px; font-size:.95rem; vertical-align:middle; margin-inline-end:8px; }
+.soundbtn.lg{ width:60px; height:60px; font-size:1.6rem; }
+.fc-sound{ position:absolute; top:10px; inset-inline-end:14px; width:36px; height:36px; font-size:1rem; }
+.replay-btn{
+  border:none; cursor:pointer; color:#fff; background:linear-gradient(145deg,var(--teal),var(--teal-d));
+  border-radius:50%; width:110px; height:110px; font-size:2.6rem; margin:6px auto; display:block;
+  box-shadow:0 14px 28px rgba(16,168,155,.4); transition:transform .12s;
+}
+.replay-btn:hover{ transform:scale(1.05); }
+.replay-btn:active{ transform:scale(.97); }
+.qsub{ text-align:center; color:var(--muted); font-size:.85rem; margin-top:6px; }
+
+/* ---------- Schreiben (Nachschreib-Übung) ---------- */
+.trace-stage{ position:relative; width:280px; height:280px; margin:18px auto 0;
+  border-radius:var(--r-md); border:2px dashed var(--border); background:var(--surface-2); overflow:hidden; }
+.trace-guide{ position:absolute; inset:0; display:grid; place-items:center; font-size:9rem;
+  color:var(--muted); opacity:.3; pointer-events:none; user-select:none; }
+#traceCanvas{ position:absolute; inset:0; width:280px; height:280px; touch-action:none; cursor:crosshair; }
+.trace-controls{ display:flex; align-items:center; justify-content:center; gap:14px; margin-top:16px; }
+.btn-ghost.sm{ padding:9px 18px; font-size:.9rem; margin:0; }
+
+/* ---------- Wörter bilden ---------- */
+.wordsbtn{
+  width:100%; border:none; cursor:pointer; color:#fff; text-align:start;
+  border-radius:var(--r-lg); padding:20px 22px; margin-top:4px;
+  background:linear-gradient(120deg,var(--violet),#6a52e0);
+  box-shadow:0 12px 26px rgba(128,105,242,.35);
+  display:flex; align-items:center; gap:16px; transition:transform .14s;
+}
+.wordsbtn:hover{ transform:translateY(-2px); }
+.wordsbtn .big{ font-size:2rem; }
+.wordsbtn .txt b{ font-family:var(--font-display); font-size:1.15rem; display:block; }
+.wordsbtn .txt small{ opacity:.92; font-size:.85rem; }
+.word-segments{ display:flex; flex-wrap:wrap; align-items:center; gap:4px 10px; justify-content:center;
+  margin:26px 0; direction:rtl; }
+.wseg{ font-size:3rem; font-weight:600; background:var(--surface-2); border:2px solid var(--border);
+  border-radius:14px; padding:6px 16px; display:inline-block; }
+.wplus{ font-size:1.6rem; color:var(--muted); font-weight:700; font-family:var(--font-display); }
+.word-reveal{ text-align:center; margin-top:26px; padding-top:20px; border-top:1px solid var(--border); }
+.word-reveal .ar{ font-size:2.6rem; }
+.word-reveal .de{ font-family:var(--font-display); font-weight:800; font-size:1.3rem; color:var(--teal); margin:6px 0 14px; }
+
+/* ---------- Feedback-Leiste ---------- */
+.feedback{
+  position:fixed; left:0; right:0; bottom:0; transform:translateY(120%);
+  transition:transform .28s cubic-bezier(.2,.9,.3,1); z-index:40;
+}
+.feedback.show{ transform:translateY(0); }
+.feedback .inner{
+  max-width:760px; margin:0 auto; padding:18px 18px calc(18px + env(safe-area-inset-bottom));
+  border-top-left-radius:24px; border-top-right-radius:24px;
+  display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+}
+.feedback.ok .inner{ background:var(--ok-bg); }
+.feedback.bad .inner{ background:var(--bad-bg); }
+.feedback .msg{ font-family:var(--font-display); font-weight:800; font-size:1.15rem; }
+.feedback.ok .msg{ color:var(--ok); }
+.feedback.bad .msg{ color:var(--bad); }
+.feedback .sol{ font-size:.95rem; color:var(--text); width:100%; }
+.feedback .sol .ar{ font-size:1.3rem; }
+.contbtn{
+  margin-inline-start:auto; border:none; cursor:pointer; color:#fff; font-family:var(--font-display);
+  font-weight:800; font-size:1rem; padding:13px 26px; border-radius:14px; transition:transform .12s;
+}
+.feedback.ok .contbtn{ background:var(--ok); }
+.feedback.bad .contbtn{ background:var(--bad); }
+.contbtn:hover{ transform:translateY(-2px); }
+
+/* ---------- Ergebnis ---------- */
+.result{ text-align:center; background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r-lg); box-shadow:var(--shadow); padding:34px 24px; margin-top:24px; }
+.result .trophy{ font-size:4rem; }
+.result h2{ font-family:var(--font-display); font-size:1.8rem; margin:8px 0 4px; }
+.result p{ color:var(--muted); margin:0 0 18px; }
+.result .stats{ display:flex; justify-content:center; gap:14px; flex-wrap:wrap; margin-bottom:22px; }
+.rstat{ background:var(--surface-2); border:1px solid var(--border); border-radius:var(--r-md);
+  padding:14px 18px; min-width:96px; }
+.rstat .n{ font-family:var(--font-display); font-weight:800; font-size:1.6rem; }
+.rstat .l{ color:var(--muted); font-size:.78rem; text-transform:uppercase; letter-spacing:.4px; }
+.rstat.xp .n{ color:var(--gold); } .rstat.acc .n{ color:var(--teal); }
+
+.btn-primary{
+  border:none; cursor:pointer; color:#fff; font-family:var(--font-display); font-weight:800;
+  font-size:1.05rem; padding:15px 30px; border-radius:16px; margin:6px;
+  background:linear-gradient(120deg,var(--teal),var(--teal-d));
+  box-shadow:0 10px 22px rgba(16,168,155,.35); transition:transform .12s;
+}
+.btn-primary:hover{ transform:translateY(-2px); }
+.btn-ghost{ border:2px solid var(--border); background:transparent; color:var(--text);
+  font-family:var(--font-display); font-weight:700; font-size:1rem; padding:13px 26px;
+  border-radius:16px; cursor:pointer; margin:6px; transition:.12s; }
+.btn-ghost:hover{ border-color:var(--teal); }
+
+/* ---------- Lernkarten (Flashcards) ---------- */
+.flash-wrap{ margin-top:20px; }
+.flashcard{ perspective:1400px; height:300px; margin:0 auto; max-width:460px; cursor:pointer; }
+.fc-inner{ position:relative; width:100%; height:100%; transition:transform .5s; transform-style:preserve-3d; }
+.flashcard.flipped .fc-inner{ transform:rotateY(180deg); }
+.fc-face{
+  position:absolute; inset:0; backface-visibility:hidden; -webkit-backface-visibility:hidden;
+  border-radius:var(--r-lg); box-shadow:var(--shadow); border:1px solid var(--border);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px; gap:10px;
+  background:var(--surface);
+}
+.fc-face.back{ transform:rotateY(180deg); background:linear-gradient(160deg,var(--surface),var(--surface-2)); }
+.fc-face .ar{ font-size:4rem; font-weight:600; }
+.fc-face .de{ font-size:1.9rem; font-family:var(--font-display); font-weight:800; text-align:center; }
+.fc-face .meta{ color:var(--muted); font-size:.95rem; text-align:center; }
+.fc-forms{ display:flex; gap:16px; margin-top:4px; }
+.fc-forms div{ text-align:center; }
+.fc-forms .ar{ font-size:1.8rem; display:block; }
+.fc-forms small{ color:var(--muted); font-size:.68rem; text-transform:uppercase; letter-spacing:.3px; }
+.fc-tag{ position:absolute; top:12px; inset-inline-start:16px; font-size:.72rem; color:var(--muted);
+  text-transform:uppercase; letter-spacing:.5px; font-weight:700; }
+.fc-hint{ position:absolute; bottom:12px; inset-inline:0; text-align:center; font-size:.75rem; color:var(--muted); }
+.flash-nav{ display:flex; align-items:center; justify-content:center; gap:14px; margin-top:18px; }
+.flash-nav .count{ font-family:var(--font-display); font-weight:700; min-width:70px; text-align:center; }
+.navbtn{ border:1px solid var(--border); background:var(--surface); color:var(--text);
+  width:52px; height:52px; border-radius:50%; font-size:1.4rem; cursor:pointer; box-shadow:var(--shadow); transition:.12s; }
+.navbtn:hover{ transform:translateY(-2px); border-color:var(--teal); }
+
+/* confetti */
+#confetti{ position:fixed; inset:0; pointer-events:none; z-index:60; }
+
+/* level-up / info toast */
+.toast{
+  position:fixed; top:20px; left:50%; transform:translate(-50%,-140%);
+  background:linear-gradient(120deg,var(--gold),var(--coral)); color:#fff;
+  padding:14px 24px; border-radius:16px; font-family:var(--font-display); font-weight:800;
+  box-shadow:0 14px 30px rgba(0,0,0,.25); z-index:70; transition:transform .4s cubic-bezier(.2,1.3,.4,1);
+  display:flex; align-items:center; gap:10px; font-size:1.05rem; max-width:90vw;
+}
+.toast.show{ transform:translate(-50%,0); }
+
+.footer-note{ text-align:center; color:var(--muted); font-size:.78rem; margin-top:40px; line-height:1.6; }
+
+*:focus-visible{ outline:3px solid var(--teal); outline-offset:2px; }
+@media (prefers-reduced-motion:reduce){ *{ animation:none!important; transition:none!important; } }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ===================== TOP BAR ===================== -->
+  <div class="topbar">
+    <div class="brand" onclick="goHome()">
+      <div class="logo ar">ع</div>
+      <div>
+        <h1>يلا يلا</h1>
+        <small>Arabisch üben · Buchstaben</small>
+      </div>
+    </div>
+    <button class="lvlmini" id="lvlMini" onclick="toggleLvlInfo()" title="Level">
+      <svg viewBox="0 0 40 40" width="40" height="40" aria-hidden="true">
+        <circle cx="20" cy="20" r="16" fill="none" stroke="var(--surface-2)" stroke-width="4"/>
+        <circle id="ringFillMini" cx="20" cy="20" r="16" fill="none" stroke="var(--teal)" stroke-width="4"
+                stroke-linecap="round" transform="rotate(-90 20 20)" stroke-dasharray="100.5" stroke-dashoffset="100.5"/>
+      </svg>
+      <span id="lvlNumMini">1</span>
+    </button>
+    <div class="stat flame" title="Tage-Streak"><span class="ico">🔥</span><span id="tStreak">0</span></div>
+    <button class="stat gem" title="Abzeichen ansehen" onclick="openBadges()"><span class="ico">💎</span><span id="tXP">0</span></button>
+    <button class="iconbtn" id="soundBtn" title="Ton an/aus" onclick="toggleSound()">🔊</button>
+    <button class="iconbtn" id="themeBtn" title="Hell/Dunkel" onclick="toggleTheme()">🌙</button>
+  </div>
+
+  <!-- ===================== HOME ===================== -->
+  <section id="home" class="screen active">
+
+    <div class="levelcard">
+      <div class="ring">
+        <svg viewBox="0 0 82 82" width="82" height="82">
+          <circle cx="41" cy="41" r="35" fill="none" stroke="var(--surface-2)" stroke-width="9"/>
+          <circle id="ringFill" cx="41" cy="41" r="35" fill="none" stroke="var(--teal)" stroke-width="9"
+                  stroke-linecap="round" stroke-dasharray="220" stroke-dashoffset="220"/>
+        </svg>
+        <div class="val"><span id="lvlNum">1</span><small>Level</small></div>
+      </div>
+      <div class="levelmeta">
+        <div class="t">Dein Fortschritt</div>
+        <div class="s" id="lvlSub">Los geht's mit dem Alphabet!</div>
+        <div class="xpbar"><i id="xpFill" style="width:0%"></i></div>
+      </div>
+    </div>
+
+    <div class="sechead"><h2>Themen</h2><span>wächst mit dem Semester</span></div>
+    <div class="navgrid" id="topicGrid"></div>
+
+    <p class="footer-note">يلا يلا — diese App startet bewusst nur mit dem Alphabet.<br>Weitere Themen (Wortschatz, Grammatik, Sätze) kommen im Laufe des Semesters dazu.</p>
+  </section>
+
+  <!-- ===================== BUCHSTABEN-ÜBERSICHT ===================== -->
+  <section id="pageLetters" class="screen">
+    <div class="page-head">
+      <button class="iconbtn" onclick="goHome()">←</button>
+      <h2>Das arabische Alphabet</h2>
+    </div>
+    <p class="page-intro">28 Buchstaben in 7 kleinen Gruppen. Bei „Hören“ geht es darum, den <b>Laut</b> mit dem richtigen Buchstaben zu verbinden — nicht um deutsche Übersetzungen. Schalte die nächste Gruppe frei, indem du „Hören“ mit mindestens 70% abschließt.</p>
+    <div class="grid" id="gridGroups"></div>
+
+    <div class="sechead"><h2>Wörter üben</h2><span>Buchstaben zu Wörtern zusammensetzen</span></div>
+    <button class="wordsbtn" onclick="startWords()">
+      <span class="big">🧩</span>
+      <span class="txt"><b>Wörter bilden</b><small>30 einfache Wörter aus einzelnen Buchstaben zusammensetzen</small></span>
+    </button>
+  </section>
+
+  <!-- ===================== LERNKARTEN ===================== -->
+  <section id="browse" class="screen">
+    <div class="sess-top">
+      <button class="iconbtn close" onclick="goLetters()">✕</button>
+      <div class="sbar"><i id="browseBar" style="width:0%"></i></div>
+    </div>
+    <div class="flash-wrap">
+      <div class="flashcard" id="flashcard" onclick="flipCard()">
+        <div class="fc-inner">
+          <div class="fc-face front">
+            <div class="fc-tag">Buchstabe</div>
+            <button class="soundbtn fc-sound" onclick="event.stopPropagation(); playLetterSound(browseLetters[browseIdx])" title="Laut hören">🔊</button>
+            <div class="ar" id="fcFront"></div>
+            <div class="fc-hint">Tippen, um Name &amp; Formen zu sehen</div>
+          </div>
+          <div class="fc-face back">
+            <button class="soundbtn fc-sound" onclick="event.stopPropagation(); playLetterSound(browseLetters[browseIdx])" title="Laut hören">🔊</button>
+            <div class="de" id="fcName"></div>
+            <div class="fc-forms" id="fcForms"></div>
+            <div class="meta" id="fcHint"></div>
+          </div>
+        </div>
+      </div>
+      <div class="flash-nav">
+        <button class="navbtn" onclick="browseStep(-1)">‹</button>
+        <div class="count" id="fcCount">1 / 4</div>
+        <button class="navbtn" onclick="browseStep(1)">›</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== ÜBEN: HÖREN ===================== -->
+  <section id="session" class="screen">
+    <div class="sess-top">
+      <button class="iconbtn close" onclick="goLetters()">✕</button>
+      <div class="sbar"><i id="sessBar" style="width:0%"></i></div>
+      <div class="combo" id="comboBox"></div>
+    </div>
+    <div class="qcard">
+      <div class="qprompt">Welcher Buchstabe macht diesen Laut?</div>
+      <div class="qword">
+        <button class="replay-btn" id="replayBtn" onclick="replayListen()" title="Nochmal hören">🔊</button>
+      </div>
+      <div class="qsub">Tippen zum (erneuten) Anhören</div>
+      <div class="options" id="qOptions"></div>
+    </div>
+  </section>
+
+  <!-- ===================== ÜBEN: SCHREIBEN ===================== -->
+  <section id="writescreen" class="screen">
+    <div class="sess-top">
+      <button class="iconbtn close" onclick="goLetters()">✕</button>
+      <div class="sbar"><i id="writeBar" style="width:0%"></i></div>
+    </div>
+    <div class="qcard">
+      <div class="qprompt">Schreibe den Buchstaben nach — und hör dabei den Laut</div>
+      <div class="trace-stage">
+        <div class="trace-guide ar" id="traceGuide"></div>
+        <canvas id="traceCanvas" width="280" height="280"></canvas>
+      </div>
+      <div class="trace-controls">
+        <button class="soundbtn lg" onclick="playLetterSound(writeLetters[writeIdx])" title="Laut hören">🔊</button>
+        <button class="btn-ghost sm" onclick="clearTrace()">🧹 Löschen</button>
+      </div>
+      <div class="flash-nav">
+        <button class="navbtn" onclick="writeStep(-1)">‹</button>
+        <div class="count" id="writeCount">1 / 4</div>
+        <button class="navbtn" onclick="writeStep(1)">›</button>
+      </div>
+      <div style="text-align:center; margin-top:18px;">
+        <button class="btn-primary" onclick="finishWrite()">Fertig ✓</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== ÜBEN: WÖRTER BILDEN ===================== -->
+  <section id="wordscreen" class="screen">
+    <div class="sess-top">
+      <button class="iconbtn close" onclick="goLetters()">✕</button>
+      <div class="sbar"><i id="wordBar" style="width:0%"></i></div>
+    </div>
+    <div class="qcard">
+      <div class="qprompt">Schreibe die Buchstaben ins Heft und verbinde sie</div>
+      <div class="word-segments ar" id="wordSegments"></div>
+      <div class="word-reveal" id="wordReveal" hidden>
+        <div class="ar" id="wordRevealAr"></div>
+        <div class="de" id="wordRevealDe"></div>
+      </div>
+      <div style="text-align:center; margin-top:24px;">
+        <button class="btn-primary" id="wordNextBtn" onclick="revealOrNext()">Verbundenes Wort zeigen</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== ERGEBNIS ===================== -->
+  <section id="result" class="screen">
+    <div class="result">
+      <div class="trophy" id="rTrophy">🏆</div>
+      <h2 id="rTitle">Super gemacht!</h2>
+      <p id="rSubtitle">Du hast die Übung abgeschlossen.</p>
+      <div class="stats">
+        <div class="rstat xp"><div class="n" id="rXP">0</div><div class="l">XP</div></div>
+        <div class="rstat acc" id="rAccBox"><div class="n" id="rAcc">0%</div><div class="l">Treffer</div></div>
+      </div>
+      <div>
+        <button class="btn-primary" id="rNext" hidden onclick="resultNext()">Nächste Gruppe →</button>
+        <button class="btn-primary" id="rAgain" onclick="resultAgain()">Nochmal üben</button>
+        <button class="btn-ghost" onclick="goLetters()">Zur Übersicht</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- ===================== FEEDBACK-LEISTE ===================== -->
+<div class="feedback" id="feedback">
+  <div class="inner">
+    <span class="msg" id="fbMsg"></span>
+    <button class="contbtn" id="fbBtn">Weiter</button>
+  </div>
+</div>
+
+<!-- ===================== ABZEICHEN-MODAL ===================== -->
+<div class="modal" id="badgeModal" hidden onclick="if(event.target===this)closeBadges()">
+  <div class="modal-card">
+    <div class="modal-head"><h2>💎 Abzeichen</h2><button class="iconbtn" onclick="closeBadges()">✕</button></div>
+    <p class="modal-sub" id="badgeCount"></p>
+    <div class="badge-strip" id="badgeStrip"></div>
+    <div class="badge-detail" id="badgeDetail" hidden></div>
+    <p class="modal-note">Sammle 💎 XP, um weiterzureisen. Tippe ein bereistes Land, um sein Dialektwort zu sehen.</p>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span>🎉</span><span id="toastMsg"></span></div>
+<canvas id="confetti"></canvas>
+
+<script>
+/* ============================================================
+   INHALT — HIER ERWEITERN
+   ------------------------------------------------------------
+   Diese App startet bewusst nur mit dem Alphabet, damit die
+   Studierenden nichts sehen, was sie noch nicht lesen können.
+
+   Neues Thema freischalten, sobald es passt:
+   1) Unten im TOPIC_TILES-Array das passende Objekt suchen
+   2) "locked:true" auf "locked:false" setzen
+   3) Eine passende "go"-Funktion schreiben/verlinken, die auf
+      eine neue Seite navigiert (wie openLetters() für Buchstaben)
+   ============================================================ */
+
+/* ---- Buchstaben-Daten: 28 Buchstaben in 7 Gruppen à 4 ----
+   "id" ist der Dateiname für eine eigene Audio-Aufnahme, siehe
+   den Abschnitt AUSSPRACHE weiter unten. */
+const LETTERS = [
+  {id:'alif', ar:'ا', name:'Alif',   hint:'Langes „a" – trägt oft die kurzen Vokale', group:0},
+  {id:'ba',   ar:'ب', name:'Ba',     hint:'wie dt. „b"', group:0},
+  {id:'ta',   ar:'ت', name:'Ta',     hint:'wie dt. „t"', group:0},
+  {id:'tha',  ar:'ث', name:'Tha',    hint:'wie engl. „th" in think', group:0},
+
+  {id:'jim',      ar:'ج', name:'Dschim', hint:'wie „dsch" in Dschungel', group:1},
+  {id:'ha_emph',  ar:'ح', name:'Ha (hart)', hint:'scharfes, gehauchtes h, tief im Rachen', group:1},
+  {id:'kha',      ar:'خ', name:'Kha',    hint:'wie „ch" in Bach', group:1},
+  {id:'dal',      ar:'د', name:'Dal',    hint:'wie dt. „d"', group:1},
+
+  {id:'dhal', ar:'ذ', name:'Dhal',   hint:'wie engl. „th" in this', group:2},
+  {id:'ra',   ar:'ر', name:'Ra',     hint:'gerolltes r', group:2},
+  {id:'za',   ar:'ز', name:'Za',     hint:'stimmhaftes s, wie „s" in Sonne', group:2},
+  {id:'sin',  ar:'س', name:'Sin',    hint:'stimmloses s, wie „ss" in Hass', group:2},
+
+  {id:'shin', ar:'ش', name:'Schin',  hint:'wie dt. „sch"', group:3},
+  {id:'sad',  ar:'ص', name:'Sad',    hint:'dumpfes, „schweres" s', group:3},
+  {id:'dad',  ar:'ض', name:'Dad',    hint:'dumpfes, „schweres" d', group:3},
+  {id:'ta_emph', ar:'ط', name:'Tah', hint:'dumpfes, „schweres" t', group:3},
+
+  {id:'dha_emph', ar:'ظ', name:'Zah',   hint:'dumpfes, „schweres" th (wie this)', group:4},
+  {id:'ain',      ar:'ع', name:'Ain',   hint:'Kehllaut ohne deutsche Entsprechung', group:4},
+  {id:'ghain',    ar:'غ', name:'Ghain', hint:'Rachenlaut, ähnlich dem franz. r', group:4},
+  {id:'fa',       ar:'ف', name:'Fa',    hint:'wie dt. „f"', group:4},
+
+  {id:'qaf', ar:'ق', name:'Qaf',    hint:'tiefes k, weit hinten im Rachen', group:5},
+  {id:'kaf', ar:'ك', name:'Kaf',    hint:'wie dt. „k"', group:5},
+  {id:'lam', ar:'ل', name:'Lam',    hint:'wie dt. „l"', group:5},
+  {id:'mim', ar:'م', name:'Mim',    hint:'wie dt. „m"', group:5},
+
+  {id:'nun', ar:'ن', name:'Nun',    hint:'wie dt. „n"', group:6},
+  {id:'ha',  ar:'ه', name:'Ha',     hint:'wie dt. „h"', group:6},
+  {id:'waw', ar:'و', name:'Waw',    hint:'wie „w" oder langes „u"', group:6},
+  {id:'ya',  ar:'ي', name:'Ya',     hint:'wie „j" oder langes „i"', group:6},
+];
+const GROUP_META = [
+  {title:'Gruppe 1', color:'c-teal'},
+  {title:'Gruppe 2', color:'c-coral'},
+  {title:'Gruppe 3', color:'c-violet'},
+  {title:'Gruppe 4', color:'c-gold'},
+  {title:'Gruppe 5', color:'c-blue'},
+  {title:'Gruppe 6', color:'c-emerald'},
+  {title:'Gruppe 7', color:'c-teal'},
+];
+const UNLOCK_THRESHOLD = 70; // % Treffer in "Hören", um die nächste Gruppe freizuschalten
+
+/* Buchstaben ohne Verbindung nach links (alif, dal, dhal, ra, za, waw) */
+const NONCONNECT = ['ا','د','ذ','ر','ز','و'];
+function letterForms(l){
+  const tw = 'ـ';
+  if(NONCONNECT.includes(l)) return {isolated:l, initial:l, medial:tw+l, final:tw+l};
+  return {isolated:l, initial:l+tw, medial:tw+l+tw, final:tw+l};
+}
+function lettersInGroup(g){ return LETTERS.filter(l=>l.group===g); }
+
+/* ---- Wörter bilden: 30 einfache, bekannte Wörter (ohne Hamza, außer die
+   beiden hier bewusst drin gelassenen: Islam, Deutschland). Jedes Wort wird
+   automatisch in Buchstabe+Vokalzeichen-Häppchen zerlegt (siehe segmentWord)
+   — hier einfach neue {ar, de} ergänzen, um die Liste zu erweitern. ---- */
+const WORDS = [
+  {ar:'إِسْلَام', de:'Islam'},
+  {ar:'أَلْمَانِيَا', de:'Deutschland'},
+  {ar:'مُسْلِم', de:'Muslim'},
+  {ar:'بَاب', de:'Tür'},
+  {ar:'وَالِد', de:'Vater'},
+  {ar:'بَيْت', de:'Haus'},
+  {ar:'كِتَاب', de:'Buch'},
+  {ar:'قَلَم', de:'Stift'},
+  {ar:'خُبْز', de:'Brot'},
+  {ar:'شَمْس', de:'Sonne'},
+  {ar:'قَمَر', de:'Mond'},
+  {ar:'نَجْم', de:'Stern'},
+  {ar:'بَحْر', de:'Meer'},
+  {ar:'جَبَل', de:'Berg'},
+  {ar:'قَلْب', de:'Herz'},
+  {ar:'يَد', de:'Hand'},
+  {ar:'عَيْن', de:'Auge'},
+  {ar:'مِصْر', de:'Ägypten'},
+  {ar:'سُورِيَا', de:'Syrien'},
+  {ar:'لُبْنَان', de:'Libanon'},
+  {ar:'عِرَاق', de:'Irak'},
+  {ar:'مَغْرِب', de:'Marokko'},
+  {ar:'قَطَر', de:'Katar'},
+  {ar:'مُمْتَاز', de:'ausgezeichnet'},
+  {ar:'سَلَام', de:'Frieden / Hallo'},
+  {ar:'فَم', de:'Mund'},
+  {ar:'ثَلْج', de:'Schnee'},
+  {ar:'ذَهَب', de:'Gold'},
+  {ar:'رَمَضَان', de:'Ramadan'},
+  {ar:'عَظِيم', de:'großartig'},
+];
+/* Zerlegt ein vokalisiertes Wort in Buchstabe(+Vokalzeichen)-Häppchen,
+   z.B. "مُمْتَاز" → ["مُ","مْ","تَ","ا","ز"] */
+function segmentWord(word){
+  const isDiacritic = ch => /[ً-ْٰ]/.test(ch);
+  const segs = [];
+  let cur = '';
+  for(const ch of Array.from(word)){
+    if(isDiacritic(ch) && cur){ cur += ch; }
+    else { if(cur) segs.push(cur); cur = ch; }
+  }
+  if(cur) segs.push(cur);
+  return segs;
+}
+
+/* ---- Startseiten-Kacheln: hier neue Themen ergänzen, sobald sie fertig sind ---- */
+const TOPIC_TILES = [
+  { title:'Buchstaben',       sub:'28 Buchstaben in 7 Gruppen',      icon:'🔤', color:'c-teal',   locked:false, go:openLetters },
+  { title:'Wortschatz',       sub:'Kommt im Laufe des Semesters',    icon:'📚', color:'c-coral',  locked:true },
+  { title:'Grammatik',        sub:'Kommt im Laufe des Semesters',    icon:'🧩', color:'c-violet', locked:true },
+  { title:'Sätze & Dialoge',  sub:'Kommt im Laufe des Semesters',    icon:'💬', color:'c-gold',   locked:true },
+];
+
+/* ---- Abzeichen: Reise durch die arabische Welt (durch 💎 XP freigeschaltet) ----
+   Genau wie in der großen App: pro Land ein Dialektwort. Die XP-Schwellen sind
+   bewusst niedrig gehalten, damit man schon mit dem Alphabet allein die ersten
+   Länder erreicht — und im Laufe des Semesters, mit mehr Inhalt, immer weiter reist. */
+const COUNTRY_BADGES = [
+  {id:"ma", de:"Marokko",        flag:"🇲🇦", word:"بِزَّاف",     tr:"bezzāf",    wordDe:"viel, sehr",           xp:15},
+  {id:"eh", de:"West-Sahara",    flag:"🇪🇭", word:"زَيْن",       tr:"zēn",       wordDe:"schön, gut",           xp:30},
+  {id:"mr", de:"Mauretanien",    flag:"🇲🇷", word:"لَا بَاس",    tr:"lā bās",    wordDe:"alles gut",            xp:50},
+  {id:"dz", de:"Algerien",       flag:"🇩🇿", word:"وَاش",        tr:"wāsh",      wordDe:"Was?",                 xp:80},
+  {id:"tn", de:"Tunesien",       flag:"🇹🇳", word:"بَرْشَة",     tr:"barsha",    wordDe:"sehr, viel",           xp:120},
+  {id:"ly", de:"Libyen",         flag:"🇱🇾", word:"هَلْبَة",     tr:"halba",     wordDe:"sehr, viel",           xp:175},
+  {id:"eg", de:"Ägypten",        flag:"🇪🇬", word:"إِزَّيَّك",   tr:"izzayyak",  wordDe:"Wie geht's?",          xp:250},
+  {id:"sd", de:"Sudan",          flag:"🇸🇩", word:"زَوْل",       tr:"zōl",       wordDe:"Kerl, Mensch",         xp:350},
+  {id:"ps", de:"Palästina",      flag:"🇵🇸", word:"يِسْلَمُو",   tr:"yislamo",   wordDe:"danke",                xp:480},
+  {id:"lb", de:"Libanon",        flag:"🇱🇧", word:"شُو",         tr:"shū",       wordDe:"Was?",                 xp:650},
+  {id:"sy", de:"Syrien",         flag:"🇸🇾", word:"مْنِيح",      tr:"mnīḥ",      wordDe:"gut",                  xp:880},
+  {id:"jo", de:"Jordanien",      flag:"🇯🇴", word:"زَاكِي",      tr:"zāki",      wordDe:"lecker, super",        xp:1180},
+  {id:"iq", de:"Irak",           flag:"🇮🇶", word:"شْلُونَك",    tr:"shlōnak",   wordDe:"Wie geht's?",          xp:1580},
+  {id:"kw", de:"Kuwait",         flag:"🇰🇼", word:"وَايِد",      tr:"wāyed",     wordDe:"viel, sehr",           xp:2100},
+  {id:"sa", de:"Saudi-Arabien",  flag:"🇸🇦", word:"الْحِين",     tr:"al-ḥīn",    wordDe:"jetzt",                xp:2800},
+  {id:"bh", de:"Bahrain",        flag:"🇧🇭", word:"شِسْمَه",     tr:"shismah",   wordDe:"Dingsbums",            xp:3700},
+  {id:"qa", de:"Katar",          flag:"🇶🇦", word:"شَخْبَارَك",  tr:"shakhbārak",wordDe:"Was gibt's?",          xp:4900},
+  {id:"ae", de:"VAE",            flag:"🇦🇪", word:"هَلَا وَاللَّه",tr:"hala wallah",wordDe:"herzlich willkommen",xp:6500},
+  {id:"om", de:"Oman",           flag:"🇴🇲", word:"شْحَالَك",    tr:"shḥālak",   wordDe:"Wie geht's?",          xp:8600},
+  {id:"ye", de:"Jemen",          flag:"🇾🇪", word:"دَحِّين",     tr:"daḥḥīn",    wordDe:"jetzt",                xp:11000},
+];
+const _STAR="M0 -2 L0.47 -0.65 L1.9 -0.62 L0.76 0.25 L1.18 1.62 L0 0.8 L-1.18 1.62 L-0.76 0.25 L-1.9 -0.62 L-0.47 -0.65 Z";
+const SYRIA_SVG=`<svg viewBox="0 0 30 20" class="flag-svg" xmlns="http://www.w3.org/2000/svg"><rect width="30" height="20" fill="#fff"/><rect width="30" height="6.67" fill="#0f7d3d"/><rect y="13.33" width="30" height="6.67" fill="#111"/><g fill="#ce1126"><path transform="translate(8 10) scale(1.15)" d="${_STAR}"/><path transform="translate(15 10) scale(1.15)" d="${_STAR}"/><path transform="translate(22 10) scale(1.15)" d="${_STAR}"/></g></svg>`;
+function flagView(id, emoji){ return id==="sy" ? SYRIA_SVG : emoji; }
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const LS_KEY = "yallaArabiBuchstaben_v1";
+let state = loadState();
+function loadState(){
+  try{ const s = JSON.parse(localStorage.getItem(LS_KEY)); if(s) return s; }catch(e){}
+  return { xp:0, streak:0, lastPlayed:null, groupScore:{}, sound:true, theme:null, badges:[] };
+}
+function saveState(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){} }
+// Aufräumen: alte Abzeichen-IDs aus einer früheren App-Version (vor dem
+// Länder-System) rauswerfen, damit die Zählung nicht mehr Länder zeigt,
+// als tatsächlich als Kacheln vorhanden sind.
+state.badges = (state.badges||[]).filter(id=>COUNTRY_BADGES.some(b=>b.id===id));
+saveState();
+
+const XP = { correct:4, write:3 };
+const MAX_LEVEL = 12;
+const LVLXP = [0, 0, 80, 200, 380, 650, 1050, 1650, 2550, 3900, 5900, 8900, 13500];
+function xpForLevel(lvl){ return LVLXP[Math.max(1, Math.min(lvl, MAX_LEVEL))]; }
+function levelFromXP(xp){ let l=1; while(l<MAX_LEVEL && LVLXP[l+1]<=xp) l++; return l; }
+let lvlInfoText = "";
+
+function isGroupUnlocked(g){ return g===0 || (state.groupScore[g-1]||0) >= UNLOCK_THRESHOLD; }
+
+function shuffle(arr){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){ const j=(Math.random()*(i+1))|0; [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+function bumpStreak(){
+  const today = new Date().toDateString();
+  if(state.lastPlayed === today) return;
+  const y = new Date(); y.setDate(y.getDate()-1);
+  state.streak = (state.lastPlayed === y.toDateString()) ? (state.streak||0)+1 : 1;
+  state.lastPlayed = today;
+}
+
+function addXP(n){
+  const before = levelFromXP(state.xp);
+  state.xp += n;
+  const after = levelFromXP(state.xp);
+  saveState();
+  if(after>before) levelUpToast(after);
+}
+
+function checkBadges(silent){
+  state.badges = state.badges || [];
+  const gained = [];
+  COUNTRY_BADGES.forEach(b=>{ if(state.xp>=b.xp && !state.badges.includes(b.id)){ state.badges.push(b.id); gained.push(b); } });
+  if(gained.length){ saveState(); renderBadges();
+    if(!silent) gained.forEach((b,i)=> setTimeout(()=>countryUnlock(b), 600+i*2800));
+  }
+}
+function countryUnlock(b){
+  const t=document.getElementById("toast");
+  document.getElementById("toastMsg").innerHTML="Neues Land bereist: "+flagView(b.id,b.flag)+" <b>"+b.de+"</b> · <span class=\"ar\" dir=\"rtl\">"+b.word+"</span> = "+b.wordDe;
+  t.classList.add("show");
+  fireConfetti(b.id==="sy" ? "⭐" : b.flag);
+  setTimeout(()=>t.classList.remove("show"), 3800);
+}
+function showDialect(id){
+  const b=COUNTRY_BADGES.find(x=>x.id===id); if(!b) return;
+  const d=document.getElementById('badgeDetail');
+  d.innerHTML=`${flagView(b.id,b.flag)} <b>${b.de}</b> — <span class="ar" dir="rtl">${b.word}</span> <span class="tr">(${b.tr})</span> = ${b.wordDe}`;
+  d.hidden=false;
+}
+function renderBadges(){
+  const host=document.getElementById('badgeStrip'); if(!host) return;
+  const owned = state.badges||[];
+  document.getElementById('badgeCount').textContent = owned.length+' / '+COUNTRY_BADGES.length+' Länder bereist';
+  host.innerHTML = COUNTRY_BADGES.map(b=>{
+    const got = owned.includes(b.id);
+    return `<button class="badge ${got?'earned':'locked'}" ${got?`onclick="showDialect('${b.id}')"`:''} title="${got?b.de:('Noch '+Math.max(0,b.xp-state.xp)+' XP')}">
+      <span class="b-ico">${got?flagView(b.id,b.flag):'🔒'}</span>
+      <span class="b-name">${got?b.de:b.xp+' 💎'}</span></button>`;
+  }).join('');
+}
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function goHome(){ renderHome(); show('home'); }
+function goLetters(){ renderGroups(); show('pageLetters'); }
+function openLetters(){ goLetters(); }
+
+/* ============================================================
+   HOME
+   ============================================================ */
+function refreshTopbarStats(){
+  document.getElementById('tXP').textContent = state.xp;
+  document.getElementById('tStreak').textContent = state.streak||0;
+}
+function renderHome(){
+  refreshTopbarStats();
+
+  const lvl = levelFromXP(state.xp);
+  const isMax = lvl>=MAX_LEVEL;
+  const base = xpForLevel(lvl), next = xpForLevel(lvl+1);
+  const pct = isMax? 1 : Math.max(0, Math.min(1, (state.xp-base)/(next-base)));
+  document.getElementById('lvlNumMini').textContent = lvl;
+  document.getElementById('lvlNum').textContent = lvl;
+  const Cm = 2*Math.PI*16, Cb = 2*Math.PI*35;
+  document.getElementById('ringFillMini').style.strokeDashoffset = Cm*(1-pct);
+  document.getElementById('ringFill').style.strokeDashoffset = Cb*(1-pct);
+  document.getElementById('xpFill').style.width = (pct*100)+'%';
+  document.getElementById('lvlSub').textContent = isMax
+    ? 'Höchstes Level erreicht! 🎉'
+    : 'Noch '+(next-state.xp)+' XP bis Level '+(lvl+1);
+  lvlInfoText = isMax ? ('Level '+lvl+' · Höchstes Level erreicht! 🎉')
+                      : ('Level '+lvl+' · noch '+(next-state.xp)+' XP bis Level '+(lvl+1));
+
+  renderTopicTiles();
+}
+
+function renderTopicTiles(){
+  const host = document.getElementById('topicGrid');
+  host.innerHTML = TOPIC_TILES.map((t,i)=>`
+    <button class="navtile ${t.color}" style="${t.locked?'opacity:.55;filter:grayscale(.5)':''}" onclick="onTopicTile(${i})">
+      <div class="nt-ico">${t.locked?'🔒':t.icon}</div>
+      <div class="nt-t">${t.title}</div>
+      <div class="nt-s">${t.sub}</div>
+    </button>`).join('');
+}
+function onTopicTile(i){
+  const t = TOPIC_TILES[i];
+  if(t.locked){ showInfoToast('✨ „'+t.title+'" kommt bald – wird im Laufe des Semesters ergänzt!'); return; }
+  if(t.go) t.go();
+}
+
+/* ============================================================
+   GRUPPEN-ÜBERSICHT
+   ============================================================ */
+function renderGroups(){
+  const host = document.getElementById('gridGroups');
+  host.innerHTML = GROUP_META.map((meta,g)=>{
+    const letters = lettersInGroup(g);
+    const unlocked = isGroupUnlocked(g);
+    const score = state.groupScore[g]||0;
+    return `<div class="cat ${meta.color} ${unlocked?'':'locked'}">
+      <div class="head">
+        ${unlocked?'':'<span class="lock">🔒</span>'}
+        <h3>${meta.title}</h3>
+        <div class="letters ar">${letters.map(l=>l.ar).join(' ')}</div>
+      </div>
+      <div class="body">
+        <div class="prog"><i style="width:${score}%"></i></div>
+        <div class="progtxt">${unlocked? ('Bestes Ergebnis: '+score+'%') : 'Vorherige Gruppe mit ≥'+UNLOCK_THRESHOLD+'% abschließen'}</div>
+        <div class="btns">
+          <button ${unlocked?'':'disabled'} onclick="startBrowse(${g})">📇 Lernen</button>
+          <button class="pr" ${unlocked?'':'disabled'} onclick="startListen(${g})">👂 Hören</button>
+          <button ${unlocked?'':'disabled'} onclick="startWrite(${g})">✍️ Schreiben</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ============================================================
+   LERNKARTEN (FLASHCARDS)
+   ============================================================ */
+let browseLetters = [], browseIdx = 0;
+function startBrowse(g){
+  browseLetters = lettersInGroup(g);
+  browseIdx = 0;
+  renderBrowseCard();
+  show('browse');
+}
+function renderBrowseCard(){
+  const l = browseLetters[browseIdx];
+  const f = letterForms(l.ar);
+  document.getElementById('fcFront').textContent = l.ar;
+  document.getElementById('fcName').textContent = l.name;
+  document.getElementById('fcHint').textContent = l.hint;
+  document.getElementById('fcForms').innerHTML = `
+    <div><span class="ar">${f.isolated}</span><small>Allein</small></div>
+    <div><span class="ar">${f.initial}</span><small>Anfang</small></div>
+    <div><span class="ar">${f.medial}</span><small>Mitte</small></div>
+    <div><span class="ar">${f.final}</span><small>Ende</small></div>`;
+  document.getElementById('fcCount').textContent = (browseIdx+1)+' / '+browseLetters.length;
+  document.getElementById('browseBar').style.width = (((browseIdx+1)/browseLetters.length)*100)+'%';
+  document.getElementById('flashcard').classList.remove('flipped');
+}
+function flipCard(){ document.getElementById('flashcard').classList.toggle('flipped'); }
+function browseStep(d){
+  browseIdx = (browseIdx + d + browseLetters.length) % browseLetters.length;
+  renderBrowseCard();
+}
+
+/* ============================================================
+   ÜBEN: HÖREN
+   ------------------------------------------------------------
+   Kernübung: Laut abspielen → den passenden Buchstaben antippen.
+   Es wird NICHT mehr nach dem deutschen Namen gefragt — es geht
+   um die Verbindung Laut ↔ Schriftzeichen.
+   ============================================================ */
+let listenQ = [], listenIdx = 0, listenCorrect = 0, listenCombo = 0, listenGroup = 0, listenXP = 0;
+function startListen(g){
+  listenGroup = g;
+  const letters = lettersInGroup(g);
+  const pool = shuffle([...letters, ...letters]); // zwei Durchläufe zum Üben
+  listenQ = pool.map(l=>{
+    const others = shuffle(LETTERS.filter(x=>x.ar!==l.ar)).slice(0,3);
+    return { letter:l, options: shuffle([l, ...others]) };
+  });
+  listenIdx = 0; listenCorrect = 0; listenCombo = 0; listenXP = 0;
+  renderListen();
+  show('session');
+}
+function renderListen(){
+  const q = listenQ[listenIdx];
+  document.getElementById('sessBar').style.width = ((listenIdx/listenQ.length)*100)+'%';
+  document.getElementById('comboBox').textContent = listenCombo>1 ? ('🔥'+listenCombo) : '';
+  document.getElementById('qOptions').innerHTML = q.options.map((o,i)=>
+    `<button class="opt" onclick="answerListen(${i})"><span class="ar">${o.ar}</span></button>`).join('');
+  playLetterSound(q.letter);
+}
+function replayListen(){ playLetterSound(listenQ[listenIdx].letter); }
+function answerListen(i){
+  const q = listenQ[listenIdx];
+  const opts = document.querySelectorAll('#qOptions .opt');
+  opts.forEach(o=>o.classList.add('locked'));
+  const chosen = q.options[i];
+  const ok = chosen.ar === q.letter.ar;
+  opts[i].classList.add(ok?'correct':'wrong');
+  if(!ok){ opts.forEach((o,idx)=>{ if(q.options[idx].ar===q.letter.ar) o.classList.add('correct'); }); }
+  beep(ok);
+  if(ok){ listenCorrect++; listenCombo++; listenXP += XP.correct; } else { listenCombo=0; }
+  showFeedback(ok, ok? '' : (q.letter.ar+' ('+q.letter.name+')'), ()=>{
+    listenIdx++;
+    if(listenIdx>=listenQ.length) finishListen(); else renderListen();
+  });
+}
+function finishListen(){
+  const pct = Math.round((listenCorrect/listenQ.length)*100);
+  addXP(listenXP);
+  const prevBest = state.groupScore[listenGroup]||0;
+  state.groupScore[listenGroup] = Math.max(prevBest, pct);
+  bumpStreak(); saveState(); checkBadges(); refreshTopbarStats();
+  const justUnlockedNext = pct>=UNLOCK_THRESHOLD && prevBest<UNLOCK_THRESHOLD && listenGroup<6;
+  document.getElementById('rTrophy').textContent = pct>=UNLOCK_THRESHOLD ? '🏆' : '💪';
+  document.getElementById('rTitle').textContent = pct>=UNLOCK_THRESHOLD ? 'Super gemacht!' : 'Guter Versuch!';
+  document.getElementById('rSubtitle').textContent = justUnlockedNext
+    ? 'Gruppe '+(listenGroup+2)+' ist jetzt freigeschaltet!'
+    : (pct>=UNLOCK_THRESHOLD ? 'Diese Gruppe sitzt schon gut.' : 'Übe diese Gruppe noch etwas weiter.');
+  document.getElementById('rXP').textContent = listenXP;
+  document.getElementById('rAcc').textContent = pct+'%';
+  document.getElementById('rAccBox').hidden = false;
+  document.getElementById('rNext').hidden = !justUnlockedNext;
+  resultMode = 'listen';
+  if(pct>=UNLOCK_THRESHOLD) fireConfetti();
+  show('result');
+}
+
+/* ============================================================
+   ÜBEN: SCHREIBEN
+   ------------------------------------------------------------
+   Freihand-Nachschreiben auf einem Canvas, mit dem Laut per
+   Knopfdruck beliebig oft wiederholbar — keine Bewertung, reine
+   Übung der Verbindung Laut ↔ Bewegung/Form.
+   ============================================================ */
+let writeLetters = [], writeIdx = 0, writeGroup = 0;
+let traceCtx = null, traceDrawing = false;
+function startWrite(g){
+  writeGroup = g;
+  writeLetters = lettersInGroup(g);
+  writeIdx = 0;
+  renderWriteCard();
+  show('writescreen');
+}
+function renderWriteCard(){
+  const l = writeLetters[writeIdx];
+  document.getElementById('traceGuide').textContent = letterForms(l.ar).isolated;
+  document.getElementById('writeCount').textContent = (writeIdx+1)+' / '+writeLetters.length;
+  document.getElementById('writeBar').style.width = (((writeIdx+1)/writeLetters.length)*100)+'%';
+  clearTrace();
+  playLetterSound(l);
+}
+function writeStep(d){
+  writeIdx = (writeIdx + d + writeLetters.length) % writeLetters.length;
+  renderWriteCard();
+}
+function finishWrite(){
+  const xp = writeLetters.length * XP.write;
+  addXP(xp);
+  bumpStreak(); saveState(); checkBadges(); refreshTopbarStats();
+  document.getElementById('rTrophy').textContent = '✍️';
+  document.getElementById('rTitle').textContent = 'Geschrieben!';
+  document.getElementById('rSubtitle').textContent = 'Gut geübt — weiter mit „Hören“ für den Fortschritt dieser Gruppe.';
+  document.getElementById('rXP').textContent = xp;
+  document.getElementById('rAccBox').hidden = true;
+  document.getElementById('rNext').hidden = true;
+  resultMode = 'write';
+  fireConfetti();
+  show('result');
+}
+
+/* ---- Canvas-Nachschreiben ---- */
+function setupTraceCanvas(){
+  const cv = document.getElementById('traceCanvas');
+  traceCtx = cv.getContext('2d');
+  traceCtx.lineWidth = 14; traceCtx.lineCap = 'round'; traceCtx.lineJoin = 'round';
+  traceCtx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--teal').trim() || '#10a89b';
+  const pos = e=>{ const r=cv.getBoundingClientRect(); return { x:(e.clientX-r.left)*cv.width/r.width, y:(e.clientY-r.top)*cv.height/r.height }; };
+  cv.addEventListener('pointerdown', e=>{ traceDrawing=true; const p=pos(e); traceCtx.beginPath(); traceCtx.moveTo(p.x,p.y); cv.setPointerCapture(e.pointerId); });
+  cv.addEventListener('pointermove', e=>{ if(!traceDrawing) return; const p=pos(e); traceCtx.lineTo(p.x,p.y); traceCtx.stroke(); });
+  ['pointerup','pointercancel','pointerleave'].forEach(ev=> cv.addEventListener(ev, ()=> traceDrawing=false));
+}
+function clearTrace(){
+  if(!traceCtx) return;
+  const cv=document.getElementById('traceCanvas');
+  traceCtx.clearRect(0,0,cv.width,cv.height);
+}
+
+/* ============================================================
+   ÜBEN: WÖRTER BILDEN
+   ------------------------------------------------------------
+   Die Buchstaben eines Wortes stehen schon in der richtigen
+   Reihenfolge, getrennt durch "+" (siehe segmentWord). Die
+   Studierenden schreiben und verbinden sie von Hand im Heft.
+   Erst auf Knopfdruck zeigt die App das verbundene Wort samt
+   Bedeutung, damit sie ihre eigene Verbindung überprüfen können.
+   ============================================================ */
+let wordList = [], wordIdx = 0, wordRevealed = false;
+function startWords(){
+  wordList = shuffle(WORDS);
+  wordIdx = 0;
+  renderWord();
+  show('wordscreen');
+}
+function renderWord(){
+  const w = wordList[wordIdx];
+  const segs = segmentWord(w.ar);
+  document.getElementById('wordSegments').innerHTML =
+    segs.map(s=>`<span class="wseg">${s}</span>`).join('<span class="wplus">+</span>');
+  document.getElementById('wordReveal').hidden = true;
+  document.getElementById('wordBar').style.width = ((wordIdx/wordList.length)*100)+'%';
+  document.getElementById('wordNextBtn').textContent = 'Verbundenes Wort zeigen';
+  wordRevealed = false;
+}
+function revealOrNext(){
+  if(!wordRevealed){
+    const w = wordList[wordIdx];
+    document.getElementById('wordRevealAr').textContent = w.ar;
+    document.getElementById('wordRevealDe').textContent = w.de;
+    document.getElementById('wordReveal').hidden = false;
+    document.getElementById('wordNextBtn').textContent =
+      (wordIdx+1>=wordList.length) ? 'Fertig ✓' : 'Nächstes Wort →';
+    wordRevealed = true;
+    addXP(5); refreshTopbarStats();
+    fireConfetti();
+  } else {
+    wordIdx++;
+    if(wordIdx>=wordList.length) finishWords(); else renderWord();
+  }
+}
+function finishWords(){
+  bumpStreak(); saveState(); checkBadges(); refreshTopbarStats();
+  document.getElementById('rTrophy').textContent = '🧩';
+  document.getElementById('rTitle').textContent = 'Alle Wörter geschafft!';
+  document.getElementById('rSubtitle').textContent = 'Stark — du hast alle 30 Wörter geschrieben und verbunden.';
+  document.getElementById('rXP').textContent = wordList.length*5;
+  document.getElementById('rAccBox').hidden = true;
+  document.getElementById('rNext').hidden = true;
+  resultMode = 'words';
+  fireConfetti();
+  show('result');
+}
+
+/* ---- Ergebnis-Buttons ---- */
+let resultMode = 'listen';
+function resultAgain(){
+  if(resultMode==='write') startWrite(writeGroup);
+  else if(resultMode==='words') startWords();
+  else startListen(listenGroup);
+}
+function resultNext(){ startListen(listenGroup+1); }
+
+/* ============================================================
+   FEEDBACK-LEISTE
+   ============================================================ */
+function showFeedback(ok, solutionText, onContinue){
+  const fb = document.getElementById('feedback');
+  fb.classList.remove('ok','bad'); fb.classList.add(ok?'ok':'bad');
+  document.getElementById('fbMsg').textContent = ok? 'Richtig! 🎉' : ('Fast — das war: '+solutionText);
+  fb.classList.add('show');
+  const btn = document.getElementById('fbBtn');
+  btn.onclick = ()=>{ fb.classList.remove('show'); onContinue(); };
+}
+
+/* ============================================================
+   SOUND
+   ============================================================ */
+let actx=null;
+function beep(ok){
+  if(!state.sound) return;
+  try{
+    actx = actx || new (window.AudioContext||window.webkitAudioContext)();
+    const o=actx.createOscillator(), g=actx.createGain();
+    o.connect(g); g.connect(actx.destination);
+    o.type="sine";
+    if(ok){ o.frequency.setValueAtTime(660,actx.currentTime); o.frequency.setValueAtTime(880,actx.currentTime+.09); }
+    else { o.frequency.setValueAtTime(300,actx.currentTime); o.frequency.setValueAtTime(200,actx.currentTime+.12); }
+    g.gain.setValueAtTime(.14,actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+.28);
+    o.start(); o.stop(actx.currentTime+.3);
+  }catch(e){}
+}
+function toggleSound(){
+  state.sound=!state.sound; saveState();
+  document.getElementById('soundBtn').textContent = state.sound? '🔊':'🔇';
+}
+
+/* ============================================================
+   AUSSPRACHE
+   ------------------------------------------------------------
+   Für jeden Buchstaben wird zuerst versucht, eine eigene Audio-
+   Datei abzuspielen: audio/<id>.mp3 — die "id" steht bei jedem
+   Buchstaben in LETTERS (z.B. {id:'alif', ar:'ا', ...} erwartet
+   die Datei audio/alif.mp3). Lege dazu einen Ordner "audio" neben
+   dieser HTML-Datei an und packe dort eigene Aufnahmen hinein
+   (deine Stimme, eine*n Muttersprachler*in, oder Material, für
+   das du die Rechte hast) — Dateiname jeweils = id + ".mp3".
+   Fehlt die Datei, springt die App automatisch auf die
+   Sprachausgabe des Geräts (Web Speech API) als Platzhalter;
+   Qualität und Verfügbarkeit einer arabischen Stimme hängen vom
+   Gerät/Browser ab. Ich habe bewusst KEINE Audiodateien von
+   fremden Webseiten heruntergeladen und eingebettet, da deren
+   Nutzungsrechte nicht geklärt waren.
+   ============================================================ */
+function playLetterSound(l){
+  if(!state.sound || !l) return;
+  let handled = false;
+  const fallback = ()=>{ if(handled) return; handled = true; speakLetter(l); };
+  try{
+    const audio = new Audio('audio/'+l.id+'.mp3');
+    audio.addEventListener('error', fallback, {once:true});
+    audio.play().then(()=>{ handled = true; }).catch(fallback);
+  }catch(e){ fallback(); }
+}
+function speakLetter(l){
+  try{
+    if(!('speechSynthesis' in window)) return;
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(l.ar);
+    u.lang = 'ar-SA'; u.rate = 0.75;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+
+/* ============================================================
+   THEME
+   ============================================================ */
+function applyTheme(){
+  if(state.theme) document.documentElement.setAttribute('data-theme',state.theme);
+  else document.documentElement.removeAttribute('data-theme');
+  const dark = state.theme==='dark' || (!state.theme && matchMedia('(prefers-color-scheme:dark)').matches);
+  document.getElementById('themeBtn').textContent = dark? '☀️':'🌙';
+}
+function toggleTheme(){
+  const dark = state.theme==='dark' || (!state.theme && matchMedia('(prefers-color-scheme:dark)').matches);
+  state.theme = dark? 'light':'dark';
+  saveState(); applyTheme();
+}
+
+/* ============================================================
+   TOAST + ABZEICHEN-MODAL
+   ============================================================ */
+function levelUpToast(lvl){
+  const t=document.getElementById('toast');
+  document.getElementById('toastMsg').textContent='🎉 Level '+lvl+' erreicht!';
+  t.classList.add('show'); fireConfetti();
+  setTimeout(()=>t.classList.remove('show'),3200);
+}
+function showInfoToast(text){
+  const t=document.getElementById('toast');
+  document.getElementById('toastMsg').textContent=text;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2600);
+}
+function toggleLvlInfo(){ showInfoToast(lvlInfoText||'Level'); }
+function openBadges(){ renderBadges(); document.getElementById('badgeModal').hidden=false; }
+function closeBadges(){ document.getElementById('badgeModal').hidden=true; }
+
+/* ============================================================
+   KONFETTI
+   ============================================================ */
+const cv=document.getElementById('confetti'); const cx=cv.getContext('2d');
+let parts=[], raf=null;
+function resizeCv(){ cv.width=innerWidth; cv.height=innerHeight; }
+addEventListener('resize',resizeCv); resizeCv();
+function fireConfetti(emoji){
+  if(matchMedia('(prefers-reduced-motion:reduce)').matches) return;
+  const cols=["#10a89b","#ff6a45","#ffbf3d","#8069f2","#1fb46b","#3d9bff"];
+  if(emoji){ // Flaggen-Regen von oben (Länder-Freischaltung)
+    for(let i=0;i<32;i++){
+      parts.push({x:Math.random()*innerWidth, y:-30-Math.random()*innerHeight*0.4,
+        vx:(Math.random()-.5)*2, vy:2+Math.random()*3, g:.03,
+        s:26+Math.random()*16, emoji:emoji, r:(Math.random()-.5)*.6, vr:(Math.random()-.5)*.1, life:1.6});
+    }
+  } else {
+    for(let i=0;i<110;i++){
+      parts.push({x:innerWidth/2+(Math.random()-.5)*120, y:innerHeight*0.35,
+        vx:(Math.random()-.5)*11, vy:Math.random()*-13-4, g:.4+Math.random()*.2,
+        s:6+Math.random()*7, c:cols[(Math.random()*cols.length)|0], r:Math.random()*6, vr:(Math.random()-.5)*.4, life:1});
+    }
+  }
+  if(!raf) tick();
+}
+function tick(){
+  cx.clearRect(0,0,cv.width,cv.height);
+  parts.forEach(p=>{ p.vy+=p.g; p.x+=p.vx; p.y+=p.vy; p.r+=p.vr; p.life-=.006;
+    cx.save(); cx.translate(p.x,p.y); cx.rotate(p.r); cx.globalAlpha=Math.max(0,Math.min(1,p.life));
+    if(p.emoji){ cx.font=p.s+"px serif"; cx.textAlign="center"; cx.textBaseline="middle"; cx.fillText(p.emoji,0,0); }
+    else { cx.fillStyle=p.c; cx.fillRect(-p.s/2,-p.s/2,p.s,p.s*.6); }
+    cx.restore();
+  });
+  parts=parts.filter(p=>p.life>0 && p.y<cv.height+40);
+  if(parts.length){ raf=requestAnimationFrame(tick); } else { cx.clearRect(0,0,cv.width,cv.height); raf=null; }
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+document.getElementById('soundBtn').textContent = state.sound? '🔊':'🔇';
+applyTheme();
+checkBadges(true); // falls schon vor diesem Update XP gesammelt wurde, hier ohne Toast-Spam nachtragen
+renderBadges();
+setupTraceCanvas();
+goHome();
+</script>
+</body>
+</html>
